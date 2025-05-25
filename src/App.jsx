@@ -20,11 +20,11 @@ const App = () => {
     const [movies, setMovies] = useState([])
     const [loading, setLoading] = useState(false)
 
-    const fetchMovies = async () => {
+    const fetchMovies = async (query = '') => {
         setLoading(true)
         setErrorMessage('')
         try {
-            const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`
+            const endpoint = query ? `${API_BASE_URL}/search/movie?query=${encodeURI(query)}` :`${API_BASE_URL}/discover/movie?sort_by=popularity.desc`
             const response = await fetch(endpoint, API_OPTIONS)
             if (!response.ok) {
                 throw Error('Failed to fetch movies')
@@ -45,8 +45,8 @@ const App = () => {
     }
 
     useEffect(() => {
-        fetchMovies()
-    },[])
+        fetchMovies(searchTerm)
+    },[searchTerm])
 
     return (
         <main>
