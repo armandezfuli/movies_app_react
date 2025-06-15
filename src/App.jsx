@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
-import Search from "./components/Search.jsx"
-import Spinner from "./components/Spinner.jsx"
-import MovieCard from "./components/MovieCard.jsx"
+import Search from "./components/Search.tsx"
+import Spinner from "./components/Spinner.tsx"
+import MovieCard from "./components/MovieCard.tsx"
 import { useDebounce } from "react-use"
 import { getTrendingMovies, updateSearchCount } from "./appwrite.js"
 
@@ -43,7 +43,7 @@ const App = () => {
                 : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`
             const response = await fetch(endpoint, API_OPTIONS)
             if (!response.ok) {
-                throw Error("Failed to fetch movies")
+                console.log("Failed to fetch movies")
             }
             const data = await response.json()
 
@@ -89,12 +89,15 @@ const App = () => {
                     <section className="trending">
                         <h2>Trending Movies</h2>
                         <ul>
-                            {trendingMovies.map((movie, index) => (
-                                <li key={movie.id}>
-                                    <p>{index + 1}</p>
-                                    <img src={movie.poster_url} alt={movie.title} />
-                                </li>
-                            ))}
+                            {trendingMovies.map((movie, index) => {
+                                // console.log("Trending movies:", movie.$id)
+                                return (
+                                    <li key={movie.$id}>
+                                        <p>{index + 1}</p>
+                                        <img src={movie.poster_url} alt={movie.title} />
+                                    </li>
+                                )
+                            })}
                         </ul>
                     </section>
                 )}
