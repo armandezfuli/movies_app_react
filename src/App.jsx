@@ -3,7 +3,7 @@ import Search from "./components/Search.tsx"
 import Spinner from "./components/Spinner.tsx"
 import MovieCard from "./components/MovieCard.tsx"
 import { useDebounce } from "react-use"
-import { getTrendingMovies, updateSearchCount } from "./appwrite.js"
+import { getTrendingMovies, updateSearchCount } from "./appwrite.ts"
 
 const API_BASE_URL = "https://api.themoviedb.org/3/"
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY

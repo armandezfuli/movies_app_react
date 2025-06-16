@@ -1,11 +1,12 @@
 import { FC } from "react"
 
-interface Movie {
+export interface Movie {
     title: string
     vote_average: number
     poster_path: string | null
     release_date: string | null
     original_language: string | null
+    id?: number
 }
 interface MovieCardProps {
     movie: Movie
