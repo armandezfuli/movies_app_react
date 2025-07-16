@@ -11,7 +11,7 @@ const client = new Client()
 
 const database = new Databases(client)
 
-interface SearchDocument extends Models.Document {
+export interface SearchDocument extends Models.Document {
     searchTerm: string
     count: number
     movie_id: number

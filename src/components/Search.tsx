@@ -1,5 +1,4 @@
 import { type FC, type ChangeEvent } from "react"
-
 interface SearchProps {
     searchTerm: string
     setSearchTerm: (data: string) => void
