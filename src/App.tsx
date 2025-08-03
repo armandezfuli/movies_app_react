@@ -3,35 +3,10 @@ import Search from "./components/Search"
 import Spinner from "./components/Spinner"
 import MovieCard from "./components/MovieCard"
 import { useDebounce } from "react-use"
-import { getTrendingMovies, updateSearchCount, type SearchDocument } from "./appwrite"
-import { type Movie } from "./components/MovieCard"
+import { getTrendingMovies } from "./lib/appwrite"
+import { fetchMovies } from "./api/tmdb"
+import type { Movie, SearchDocument } from "./types/index"
 
-const API_BASE_URL = "https://api.themoviedb.org/3"
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY
-
-const buildApiUrl = (path: string, params: Record<string, string | number>) => {
-    const url = new URL(`${API_BASE_URL}${path}`)
-    Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.append(key, value.toString())
-    })
-    return url.toString()
-}
-
-const getApiOptions = (): RequestInit => ({
-    method: "GET",
-    headers: {
-        accept: "application/json",
-        authorization: `Bearer ${API_KEY}`,
-    },
-})
-
-interface TmdbMovieResponse {
-    results: Movie[]
-    total_results?: number
-    total_pages?: number
-    page?: number
-    [key: string]: any
-}
 
 const App: FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>("")
@@ -52,39 +27,20 @@ const App: FC = () => {
         }
     }
 
-    const fetchMovies = async (query: string = "") => {
-        setLoading(true)
-        setErrorMessage("")
-        try {
-            const endpoint = query
-                ? buildApiUrl("/search/movie", { query })
-                : buildApiUrl("/discover/movie", { sort_by: "popularity.desc" })
-            const response = await fetch(endpoint, getApiOptions())
-            if (!response.ok) {
-                console.log("Failed to fetch movies")
-            }
-            const data: TmdbMovieResponse = await response.json()
-
-            if (data.Response === "false") {
-                setErrorMessage(data.Error || "Failed to fetch movies")
-                setMovies([])
-                return
-            }
-            setMovies(data.results || [])
-
-            if (query && query.length > 0) {
-                await updateSearchCount(query, data.results[0])
-            }
-        } catch (e) {
-            console.log(e)
-            setErrorMessage("Error fetching movies")
-        } finally {
-            setLoading(false)
-        }
-    }
-
     useEffect(() => {
-        fetchMovies(debouncedSearchTerm)
+        const loadMovies = async () => {
+            setLoading(true)
+            setErrorMessage("")
+            try {
+                const results = await fetchMovies(debouncedSearchTerm)
+                setMovies(results)
+            } catch (err) {
+                setErrorMessage("Error fetching movies")
+            } finally {
+                setLoading(false)
+            }
+        }
+        loadMovies()
     }, [debouncedSearchTerm])
 
     useEffect(() => {
@@ -98,7 +54,7 @@ const App: FC = () => {
                 <header>
                     <img src="/hero.png" alt="hero" />
                     <h1>
-                        Find <span className="text-gradient">Movies</span> You’ll Love
+                        Find <span className="text-gradient">Movies</span> You'll Love
                         Without the Hassle
                     </h1>
                     <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />

@@ -1,15 +1,5 @@
 import { FC } from "react"
-export interface Movie {
-    title: string
-    vote_average: number
-    poster_path: string | null
-    release_date: string | null
-    original_language: string | null
-    id?: number
-}
-interface MovieCardProps {
-    movie: Movie
-}
+import type { MovieCardProps } from "../../types"
 
 const MovieCard: FC<MovieCardProps> = ({
     movie: { title, vote_average, poster_path, release_date, original_language },

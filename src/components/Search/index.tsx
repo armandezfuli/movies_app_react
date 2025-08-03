@@ -1,8 +1,5 @@
 import { type FC, type ChangeEvent } from "react"
-interface SearchProps {
-    searchTerm: string
-    setSearchTerm: (data: string) => void
-}
+import type { SearchProps } from "../../types"
 
 const Search: FC<SearchProps> = ({ searchTerm, setSearchTerm }) => {
     const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {

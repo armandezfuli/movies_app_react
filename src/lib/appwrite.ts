@@ -1,22 +1,14 @@
-import { Client, Databases, ID, Query, Models } from "appwrite"
-
+import { Client, Databases, ID, Query } from "appwrite"
 const PROJECT_ID = import.meta.env.VITE_APPWRITE_PROJECT_ID
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID
 const COLLECTION_ID = import.meta.env.VITE_APPWRITE_COLLECTION_ID
-import { Movie } from "./components/MovieCard"
+import type { Movie, SearchDocument } from "../types/index"
 
 const client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1")
     .setProject(PROJECT_ID)
 
 const database = new Databases(client)
-
-export interface SearchDocument extends Models.Document {
-    searchTerm: string
-    count: number
-    movie_id: number
-    poster_url: string
-}
 
 export const updateSearchCount = async (
     searchTerm: string,
