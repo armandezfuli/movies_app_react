@@ -1,10 +1,8 @@
 import { FC, useEffect, useState } from "react"
 import { useParams } from "react-router"
-import TmdbLogo from "../../public/tmdb.svg"
-import IMDBLogo from "../../public/IMDB_Logo_2016.svg"
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
-const VITE_OMDB_API_KEY = import.meta.env.VITE_OMDB_API_KEY
+const OMDB_API_KEY = import.meta.env.VITE_OMDB_API_KEY
 
 const options = {
     method: "GET",
@@ -14,182 +12,152 @@ const options = {
     },
 }
 
-const movieId = 1234821 // 4935 1338799 1234821  911430 299534
-const endpoint = `https://api.themoviedb.org/3/movie/${movieId}?language=en-US&append_to_response=credits,release_dates,videos`
-
-function formatRuntime(minutes) {
-    if (!minutes && minutes !== 0) return "N/A"
+function formatRuntime(minutes?: number | null) {
+    if (minutes == null) return "N/A"
     const hours = Math.floor(minutes / 60)
     const mins = minutes % 60
     return `${hours}h ${mins}m`
 }
 
 const MoviesDetails: FC = () => {
+    const { id } = useParams<{ id?: string }>()
+
+    const movieId = id ?? "/404" // 4935 1338799 1234821  911430 299534
+
     const [data, setData] = useState(null)
-    const [data2, setData2] = useState(null)
     const [certification, setCertification] = useState("")
     const [imdbRating, setImdbRating] = useState("N/A")
     const [trailerUrl, setTrailerUrl] = useState("")
+    const [isModalOpen, setIsModalOpen] = useState(false)
 
-    // Details Movie
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
     useEffect(() => {
-        fetch(endpoint, options)
-            .then((res) => res.json())
-            .then((res) => {
-                console.log("TMDB Response:", res)
-                setData(res)
-                // certification
-                const usRelease = res.release_dates?.results.find(
-                    (item) => item.iso_3166_1 === "US"
+        if (!movieId) return
+
+        const controller = new AbortController()
+        const endpoint = `https://api.themoviedb.org/3/movie/${movieId}?language=en-US&append_to_response=credits,release_dates,videos`
+
+        const fetchData = async () => {
+            try {
+                setLoading(true)
+                const res = await fetch(endpoint, {
+                    ...options,
+                    signal: controller.signal,
+                })
+                const json = await res.json()
+                setData(json)
+
+                const usRelease = json.release_dates?.results?.find(
+                    (i: any) => i.iso_3166_1 === "US"
                 )
-                const certification =
-                    usRelease?.release_dates?.[0]?.certification || "N/A"
-                setCertification(certification)
-                // triler
-                const trailer = res.videos?.results.find(
-                    (video) => video.type === "Trailer" && video.site === "YouTube"
+                setCertification(usRelease?.release_dates?.[0]?.certification ?? "N/A")
+
+                const trailer = json.videos?.results?.find(
+                    (v: any) => v.type === "Trailer" && v.site === "YouTube"
                 )
                 setTrailerUrl(
                     trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : ""
                 )
-                // for imdb
-                if (res.imdb_id) {
-                    fetch(
-                        `http://www.omdbapi.com/?i=${res.imdb_id}&apikey=${VITE_OMDB_API_KEY}`
-                    )
-                        .then((res) => res.json())
-                        .then((omdbData) => {
-                            console.log("OMDB Response:", omdbData)
-                            setImdbRating(omdbData.imdbRating || "N/A")
-                        })
-                        .catch((err) => {
-                            console.error("OMDB Error:", err)
-                            setImdbRating("N/A")
-                        })
+
+                if (json.imdb_id) {
+                    try {
+                        const om = await fetch(
+                            `https://www.omdbapi.com/?i=${json.imdb_id}&apikey=${OMDB_API_KEY}`
+                        )
+                        const omj = await om.json()
+                        setImdbRating(omj.imdbRating ?? "N/A")
+                    } catch {
+                        setImdbRating("N/A")
+                    }
                 } else {
                     setImdbRating("N/A")
                 }
-            })
-            .catch((err) => console.error("TMDB Error:", err))
+            } catch (err: any) {
+                if (err.name !== "AbortError") console.error("Fetch error:", err)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchData()
+        return () => controller.abort()
     }, [movieId])
 
-    // Credits
-    useEffect(() => {
-        fetch(
-            `https://api.themoviedb.org/3/movie/${movieId}/credits?language=en-US`,
-            options
-        )
-            .then((res) => res.json())
-            .then((res) => console.log(res))
-            .catch((err) => console.error(err))
-    }, [])
+    if (!data) return null
+    const {
+        backdrop_path,
+        poster_path,
+        title,
+        release_date,
+        genres,
+        overview,
+        original_language,
+        runtime,
+        vote_average,
+    } = data
 
-    useEffect(() => {
-        fetch(`https://api.themoviedb.org/3/movie/${movieId}/release_dates`, options)
-            .then((res) => res.json())
-            .then((res) => {
-                console.log(res)
+    const imgUrl = `https://image.tmdb.org/t/p/w1920_and_h1080_multi_faces/${backdrop_path}`
+    const posterUrl = `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${poster_path}`
+    const formattedReleaseDate = release_date?.replace(/-/g, "/")
+    const releaseYear = formattedReleaseDate?.slice(0, 4)
+    const language = original_language?.toUpperCase()
+    const rating = vote_average ? vote_average.toFixed(1) : "N/A"
 
-                // پیدا کردن داده مربوط به آمریکا
-                const usRelease = res.results.find((item) => item.iso_3166_1 === "US")
-                const certification =
-                    usRelease?.release_dates?.[0]?.certification || "N/A"
-
-                console.log("Certification:", certification)
-                setCertification(certification)
-            })
-            .catch((err) => console.error(err))
-    }, [movieId])
-
-    useEffect(() => {
-        fetch(
-            `https://api.themoviedb.org/3/movie/${movieId}/videos?language=en-US`,
-            options
-        )
-            .then((res) => res.json())
-            .then((res) => {
-                console.log("Videos Response:", res)
-                const trailer = res.results.find(
-                    (video) => video.type === "Trailer" && video.site === "YouTube"
-                )
-                if (trailer) {
-                    setTrailerUrl(`https://www.youtube.com/watch?v=${trailer.key}`)
-                } else {
-                    setTrailerUrl("")
-                }
-            })
-            .catch((err) => {
-                console.error("Videos Error:", err)
-                setTrailerUrl("")
-            })
-    }, [movieId])
-
-    const { id } = useParams()
-
-    const img_url = `https://image.tmdb.org/t/p/w1920_and_h1080_multi_faces/${data?.backdrop_path}`
-    const poster_url = `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${data?.poster_path}`
-    const original_title = data?.title
-    const release_date = data?.release_date?.replace(/-/g, "/")
-    const release_year = release_date?.slice(0, 4)
-    const genres = data?.genres
-    const belongs_to_collection = data?.popularity
-    const overview = data?.overview
-    const original_language = data?.original_language?.toUpperCase()
-    const runtime = data?.runtime
-    const vote_average = data?.vote_average?.toFixed(1) || "N/A"
-    const [isModalOpen, setIsModalOpen] = useState(false)
+    if (loading) return <div>Loading...</div>
+    if (error) return <div className="text-red-400">{error}</div>
 
     return (
         <div className="">
-            <header className="relative w-full h-dvh mt-0">
+            <header className="relative w-full md:min-h-dvh mt-0 flex justify-center items-center">
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-fixed"
                     style={{
-                        backgroundImage: `linear-gradient(to bottom, 
+                        backgroundImage: `linear-gradient(to bottom,
                         rgba(0, 0, 0, 0.9) 0%,
-                        rgba(0, 0, 0, 0.6) 20%,
-                        rgba(0, 0, 0, 0.4) 50%,
-                        rgba(0, 0, 0, 0.6) 80%,
-                        rgba(0, 0, 0, 0.9) 100%),url(${img_url})`,
-                    }}
-                />
-                <div className="relative z-10 text-white h-full items-center grid grid-cols-6">
-                    <div className="col-span-2 flex items-center">
+                        rgba(0, 0, 0, 0.7) 20%,
+                        rgba(0, 0, 0, 0.5) 50%,
+                        rgba(0, 0, 0, 0.7) 80%,
+                        rgba(0, 0, 0, 0.9) 100%),url(${imgUrl})`,
+                    }}></div>
+                <div className="relative h-full flex flex-col md:flex-row items-center justify-center text-white z-10">
+                    <div className="flex items-center mt-8 md:ml-8 lg:ml-12">
                         <img
-                            src={poster_url}
+                            src={posterUrl}
                             alt=""
-                            className="m-0 ml-4 md:ml-6 lg:ml-12 xl:ml-24
+                            className="
                                     rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2),0_5px_15px_rgba(0,0,0,0.7)]
-                                    w-[200px] md:w-[250px] lg:w-[300px] xl:w-[350px]
+                                    w-[250px] lg:w-[300px] xl:w-[350px] 
                                 "
                         />
                     </div>
-                    <div className="col-span-4">
+                    <div className="px-4 py-8 md:px-8 lg:px-12">
                         <div className="h-full">
                             <div className="">
                                 <div className="">
                                     <h1
-                                        className="m-0 text-start text-xl drop-shadow-xl
-                                        rounded-lg p-0 leading-14">
-                                        {original_title}{" "}
+                                        className="m-0 text-start text-xl xl:text-3xl drop-shadow-xl
+                                        rounded-lg p-0 leading-10 mb-6">
+                                        {title}{" "}
                                         <span className="text-sm align-super text-white/90">
-                                            ({release_year})
+                                            ({releaseYear})
                                         </span>
                                     </h1>
                                 </div>
                                 <div className="">
-                                    <div className="mb-4 w-1/3">
-                                        <ul className="flex items-center gap-x-2">
-                                            <li className="border drop-shadow-xl border-inherit px-2 py-1 text-xs rounded-md text-white/80">
+                                    <div className="mb-4 md:w-2/3">
+                                        <ul className="flex items-center gap-x-2 font-medium">
+                                            <li className="border drop-shadow-xl border-inherit px-2 py-1 text-xs xl:text-base rounded-md text-white/80 font-bold">
                                                 {certification}
                                             </li>
-                                            <li className="text-sm drop-shadow-xl text-white/90">
+                                            <li className="text-sm drop-shadow-xl text-white/90 xl:text-base">
                                                 {release_date}
                                             </li>
-                                            <li className="text-sm drop-shadow-xl text-white/90">
-                                                ({original_language})
+                                            <li className="text-sm drop-shadow-xl text-white/90 xl:text-base">
+                                                ({language})
                                             </li>
-                                            <li className="text-sm drop-shadow-xl text-white/90">
+                                            <li className="text-sm drop-shadow-xl text-white/90 xl:text-base">
                                                 {formatRuntime(runtime)}
                                             </li>
                                         </ul>
@@ -200,17 +168,17 @@ const MoviesDetails: FC = () => {
                                                 return (
                                                     <li
                                                         key={g.id}
-                                                        className="bg-white/10 backdrop-blur-xl px-3 py-1 rounded-2xl text-white/90 hover:text-white text-xs">
+                                                        className="bg-white/10 backdrop-blur-xl px-3 py-1 rounded-2xl text-white/90 hover:text-white text-xs xl:text-base font-medium">
                                                         <a href="/">{g.name}</a>
                                                     </li>
                                                 )
                                             }
                                         )}
                                     </ul>
-                                    <div className="mt-4 w-1/3 flex items-center gap-x-4">
+                                    <div className="mt-4 xl:mt-8 md:w-2/3 flex items-center gap-x-4 font-medium">
                                         <div className="flex items-center">
                                             <img
-                                                src={TmdbLogo}
+                                                src="/tmdb.svg"
                                                 alt="TMDb Logo"
                                                 className="w-8 h-8 p-0 m-0 mr-2"
                                             />
@@ -220,7 +188,7 @@ const MoviesDetails: FC = () => {
                                         </div>
                                         <div className="flex items-center">
                                             <img
-                                                src={IMDBLogo}
+                                                src="/IMDB_Logo_2016.svg"
                                                 alt="TMDb Logo"
                                                 className="w-8 p-0 m-0 mr-2"
                                             />
@@ -258,14 +226,12 @@ const MoviesDetails: FC = () => {
                                                             &times;
                                                         </button>
                                                         <iframe
-                                                            width="100%"
-                                                            height="500"
+                                                            className="w-full h-auto xs:h-[300px] sm:h-[500px]"
                                                             src={trailerUrl.replace(
                                                                 "watch?v=",
                                                                 "embed/"
                                                             )}
                                                             title="Movie Trailer"
-                                                            // frameBorder="0"
                                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                             allowFullScreen></iframe>
                                                     </div>
@@ -274,10 +240,9 @@ const MoviesDetails: FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="mt-24 bg-white/10 w-1/3 "></div>
                             </div>
-                            <div className="mt-24">
-                                <p className="max-w-2/3 overflow-hidden text-justify text-md leading-7 text-white/85 py-2 px-4 rounded-lg bg-white/10 backdrop-blur-xl">
+                            <div className="mt-8 md:mt-12 lg:mt-14 xl:mt-16">
+                                <p className="md:max-w-2/3 xl:w-1/2 overflow-hidden text-justify text-base font-medium leading-8 text-white/85 py-2 px-4 rounded-lg bg-white/10 backdrop-blur-xl xl:text-base xl:font-semibold">
                                     {overview}
                                 </p>
                             </div>
