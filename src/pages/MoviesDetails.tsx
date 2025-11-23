@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from "react"
 import { useParams } from "react-router"
+import { MovieDetails } from "../types"
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
 const OMDB_API_KEY = import.meta.env.VITE_OMDB_API_KEY
@@ -21,67 +22,83 @@ function formatRuntime(minutes?: number | null) {
 
 const MoviesDetails: FC = () => {
     const { id } = useParams<{ id?: string }>()
+    const movieId = id ?? "/404" // 4935 1338799 1234821  911430 299534 1078605
 
-    const movieId = id ?? "/404" // 4935 1338799 1234821  911430 299534
-
-    const [data, setData] = useState(null)
-    const [certification, setCertification] = useState("")
-    const [imdbRating, setImdbRating] = useState("N/A")
-    const [trailerUrl, setTrailerUrl] = useState("")
-    const [isModalOpen, setIsModalOpen] = useState(false)
-
-    const [loading, setLoading] = useState(true)
+    const [data, setData] = useState<MovieDetails | null>(null)
+    const [certification, setCertification] = useState<string>("")
+    const [imdbRating, setImdbRating] = useState<string>("N/A")
+    const [trailerUrl, setTrailerUrl] = useState<string>("")
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         if (!movieId) return
 
         const controller = new AbortController()
-        const endpoint = `https://api.themoviedb.org/3/movie/${movieId}?language=en-US&append_to_response=credits,release_dates,videos`
 
-        const fetchData = async () => {
+        // Fetch IMDB Rating
+        const fetchImdbRating = async (imdbId: string, signal: AbortSignal) => {
+            try {
+                const res = await fetch(
+                    `https://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_API_KEY}`,
+                    { signal }
+                )
+                if (!res.ok) throw new Error("OMDb request failed")
+                const json = await res.json()
+                setImdbRating(json.imdbRating ?? "N/A")
+            } catch {
+                setImdbRating("N/A")
+            }
+        }
+
+        // Fetch Movie Details
+        const fetchMovieDetails = async () => {
             try {
                 setLoading(true)
-                const res = await fetch(endpoint, {
-                    ...options,
-                    signal: controller.signal,
-                })
+
+                const res = await fetch(
+                    `https://api.themoviedb.org/3/movie/${movieId}?language=en-US&append_to_response=credits,release_dates,videos`,
+                    { ...options, signal: controller.signal }
+                )
+
+                if (!res.ok) {
+                    throw new Error(`TMDB request failed: ${res.status}`)
+                }
+
                 const json = await res.json()
                 setData(json)
 
                 const usRelease = json.release_dates?.results?.find(
-                    (i: any) => i.iso_3166_1 === "US"
+                    (r: { iso_3166_1: string }) => r.iso_3166_1 === "US"
                 )
                 setCertification(usRelease?.release_dates?.[0]?.certification ?? "N/A")
 
                 const trailer = json.videos?.results?.find(
-                    (v: any) => v.type === "Trailer" && v.site === "YouTube"
+                    (v: { type: string; site: string }) =>
+                        v.type === "Trailer" && v.site === "YouTube"
                 )
                 setTrailerUrl(
                     trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : ""
                 )
 
                 if (json.imdb_id) {
-                    try {
-                        const om = await fetch(
-                            `https://www.omdbapi.com/?i=${json.imdb_id}&apikey=${OMDB_API_KEY}`
-                        )
-                        const omj = await om.json()
-                        setImdbRating(omj.imdbRating ?? "N/A")
-                    } catch {
-                        setImdbRating("N/A")
-                    }
+                    await fetchImdbRating(json.imdb_id, controller.signal)
                 } else {
                     setImdbRating("N/A")
                 }
-            } catch (err: any) {
-                if (err.name !== "AbortError") console.error("Fetch error:", err)
+            } catch (err) {
+                if (err instanceof Error && err.name !== "AbortError") {
+                    console.error("Fetch error:", err)
+                    setError(err.message)
+                }
             } finally {
                 setLoading(false)
             }
         }
 
-        fetchData()
+        fetchMovieDetails()
+
         return () => controller.abort()
     }, [movieId])
 
@@ -127,7 +144,7 @@ const MoviesDetails: FC = () => {
                             src={posterUrl}
                             alt=""
                             className="
-                                    rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2),0_5px_15px_rgba(0,0,0,0.7)]
+                                    rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.1),0_5px_15px_rgba(0,0,0,0.1)]
                                     w-[250px] lg:w-[300px] xl:w-[350px] 
                                 "
                         />
