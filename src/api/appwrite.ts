@@ -2,7 +2,7 @@ import { Client, Databases, ID, Query } from "appwrite"
 const PROJECT_ID = import.meta.env.VITE_APPWRITE_PROJECT_ID
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID
 const COLLECTION_ID = import.meta.env.VITE_APPWRITE_COLLECTION_ID
-import type { Movie, SearchDocument } from "../types/index"
+import type { Movie, SearchDocument } from "../shared/types"
 
 const client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1")

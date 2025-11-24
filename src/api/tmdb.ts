@@ -1,6 +1,6 @@
-import { buildApiUrl } from "../lib/buildApiUrl"
-import { updateSearchCount } from "../lib/appwrite"
-import type { Movie, TmdbMovieResponse } from "../types/index"
+import { buildApiUrl } from "../features/movies/utils/buildApiUrl"
+import { updateSearchCount } from "./appwrite"
+import type { Movie, TmdbMovieResponse } from "../shared/types"
 
 const API_BASE_URL = "https://api.themoviedb.org/3"
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY

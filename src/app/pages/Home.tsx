@@ -1,11 +1,11 @@
 import { useState, useEffect, type FC } from "react"
-import Search from "../components/Search"
-import Spinner from "../components/Spinner"
-import MovieCard from "../components/MovieCard"
+import Search from "../../features/movies/components/Search"
+import Spinner from "../../features/movies/components/Spinner"
+import MovieCard from "../../features/movies/components/MovieCard"
 import { useDebounce } from "react-use"
-import { getTrendingMovies } from "../lib/appwrite"
-import { fetchMovies } from "../api/tmdb"
-import type { Movie, SearchDocument } from "../types/index"
+import { getTrendingMovies } from "../../api/appwrite"
+import { fetchMovies } from "../../api/tmdb"
+import type { Movie, SearchDocument } from "../../shared/types"
 
 const Home: FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>("")

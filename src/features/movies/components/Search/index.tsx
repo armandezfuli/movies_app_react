@@ -1,5 +1,5 @@
 import { type FC, type ChangeEvent } from "react"
-import type { SearchProps } from "../../types"
+import type { SearchProps } from "../../../../shared/types"
 
 const Search: FC<SearchProps> = ({ searchTerm, setSearchTerm }) => {
     const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {

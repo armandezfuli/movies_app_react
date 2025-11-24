@@ -1,5 +1,6 @@
 import { FC } from "react"
-import type { MovieCardProps } from "../../types"
+import type { MovieCardProps } from "../../../../shared/types"
+
 
 const MovieCard: FC<MovieCardProps> = ({
     movie: { title, vote_average, poster_path, release_date, original_language },
