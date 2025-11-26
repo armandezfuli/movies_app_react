@@ -1,9 +1,8 @@
-import { type FC } from "react"
 import { BrowserRouter, Routes, Route } from "react-router"
 import Home from "./pages/Home"
 import MoviesDetails from "./pages/MoviesDetails"
 
-const App: FC = () => {
+export default  function App() {
     return (
         <BrowserRouter>
             <Routes>
@@ -13,4 +12,4 @@ const App: FC = () => {
         </BrowserRouter>
     )
 }
-export default App
+

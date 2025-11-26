@@ -1,13 +1,13 @@
-import { useState, useEffect, type FC } from "react"
-import Search from "../../features/movies/components/Search"
-import Spinner from "../../features/movies/components/Spinner"
-import MovieCard from "../../features/movies/components/MovieCard"
+import { useState, useEffect } from "react"
+import Search from "@/features/movies/components/Search"
+import Spinner from "@/features/movies/components/Spinner"
+import MovieCard from "@/features/movies/components/MovieCard"
 import { useDebounce } from "react-use"
-import { getTrendingMovies } from "../../api/appwrite"
-import { fetchMovies } from "../../api/tmdb"
-import type { Movie, SearchDocument } from "../../shared/types"
+import { getTrendingMovies } from "@/api/appwrite"
+import { fetchMovies } from "@/api/tmdb"
+import type { Movie, SearchDocument } from "@/shared/types"
 
-const Home: FC = () => {
+export default function Home() {
     const [searchTerm, setSearchTerm] = useState<string>("")
     const [errorMessage, setErrorMessage] = useState<string>("")
     const [movies, setMovies] = useState<Movie[]>([])
@@ -92,4 +92,4 @@ const Home: FC = () => {
     )
 }
 
-export default Home
+

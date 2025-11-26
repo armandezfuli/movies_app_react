@@ -1,6 +1,6 @@
 import { buildApiUrl } from "../features/movies/utils/buildApiUrl"
 import { updateSearchCount } from "./appwrite"
-import type { Movie, TmdbMovieResponse } from "../shared/types"
+import type { Movie, TmdbMovieResponse } from "@/shared/types"
 
 const API_BASE_URL = "https://api.themoviedb.org/3"
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
@@ -13,7 +13,7 @@ const getApiOptions = (): RequestInit => ({
     },
 })
 
-const fetchMovies = async (query: string = ""): Promise<Movie[]> => {
+export const fetchMovies = async (query: string = ""): Promise<Movie[]> => {
     try {
         const endpoint = query
             ? buildApiUrl(`${API_BASE_URL}/search/movie`, { query })
@@ -37,4 +37,4 @@ const fetchMovies = async (query: string = ""): Promise<Movie[]> => {
     }
 }
 
-export { fetchMovies }
+
