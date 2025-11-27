@@ -1,53 +1,26 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import useDebouncedValue from "@/shared/hooks/useDebouncedValue"
+
+import { useMovies } from "@/features/movies/hooks/useMovies"
+import { useTrendingMovies } from "@/features/movies/hooks/useTrendingMovies"
+
 import Search from "@/features/movies/components/Search"
 import Spinner from "@/features/movies/components/Spinner"
 import MovieCard from "@/features/movies/components/MovieCard"
-import { useDebounce } from "react-use"
-import { getTrendingMovies } from "@/api/appwrite"
-import { getPopularMovies } from "@/features/movies/services/getPopularMovies"
-import { searchMovies } from "@/features/movies/services/searchMovies"
-import type { Movie, SearchDocument } from "@/shared/types"
 
 export default function Home() {
-    const [searchTerm, setSearchTerm] = useState<string>("")
-    const [errorMessage, setErrorMessage] = useState<string>("")
-    const [movies, setMovies] = useState<Movie[]>([])
-    const [trendingMovies, setTrendingMovies] = useState<SearchDocument[]>([])
-    const [loading, setLoading] = useState<boolean>(false)
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("")
+    const [searchTerm, setSearchTerm] = useState("")
+    const debouncedSearchTerm = useDebouncedValue(searchTerm, 800)
 
-    useDebounce(() => setDebouncedSearchTerm(searchTerm), 1000, [searchTerm])
+    const {
+        data: movies = [],
+        isLoading,
+        isError,
+        error,
+    } = useMovies({ query: debouncedSearchTerm })
 
-    const loadTrendingMovies = async () => {
-        try {
-            const movies = await getTrendingMovies()
-            setTrendingMovies(movies)
-        } catch (err) {
-            console.log("Error fetching trending movies", err)
-        }
-    }
-
-    useEffect(() => {
-        const loadMovies = async () => {
-            setLoading(true)
-            setErrorMessage("")
-            try {
-                const results = debouncedSearchTerm
-                    ? await searchMovies(debouncedSearchTerm)
-                    : await getPopularMovies()
-                setMovies(results)
-            } catch (err) {
-                setErrorMessage("Error fetching movies")
-            } finally {
-                setLoading(false)
-            }
-        }
-        loadMovies()
-    }, [debouncedSearchTerm])
-
-    useEffect(() => {
-        loadTrendingMovies()
-    }, [])
+    const { data: trendingMovies = [], isLoading: isTrendingLoading } =
+        useTrendingMovies()
 
     return (
         <main>
@@ -77,11 +50,20 @@ export default function Home() {
                     </section>
                 )}
                 <section className="all-movies">
-                    <h2>All movies</h2>
-                    {loading ? (
+                    <h2>
+                        {debouncedSearchTerm
+                            ? `Results for "${debouncedSearchTerm}"`
+                            : "All movies"}
+                    </h2>
+
+                    {isLoading ? (
                         <Spinner />
-                    ) : errorMessage ? (
-                        <p className="text-red-500">{errorMessage}</p>
+                    ) : isError ? (
+                        <p className="text-red-500">
+                            {(error as Error)?.message || "Failed to load movies"}
+                        </p>
+                    ) : movies.length === 0 ? (
+                        <p className="text-gray-400">No movies found</p>
                     ) : (
                         <ul>
                             {movies.map((movie) => (
