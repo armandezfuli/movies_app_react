@@ -4,7 +4,6 @@ A modern, production-ready movie discovery web app built with React + TypeScript
 
 **Live Demo**: https://movies-app-react-2f3h.vercel.app
 
-![Preview](public/screenshot.png)
 
 ## Features
 
