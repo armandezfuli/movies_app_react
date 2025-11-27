@@ -4,8 +4,8 @@ import Spinner from "@/features/movies/components/Spinner"
 import MovieCard from "@/features/movies/components/MovieCard"
 import { useDebounce } from "react-use"
 import { getTrendingMovies } from "@/api/appwrite"
-// import { fetchMovies } from "@/api/api"
 import { getPopularMovies } from "@/features/movies/services/getPopularMovies"
+import { searchMovies } from "@/features/movies/services/searchMovies"
 import type { Movie, SearchDocument } from "@/shared/types"
 
 export default function Home() {
@@ -27,14 +27,14 @@ export default function Home() {
         }
     }
 
-    
-
     useEffect(() => {
         const loadMovies = async () => {
             setLoading(true)
             setErrorMessage("")
             try {
-                const results = await getPopularMovies()
+                const results = debouncedSearchTerm
+                    ? await searchMovies(debouncedSearchTerm)
+                    : await getPopularMovies()
                 setMovies(results)
             } catch (err) {
                 setErrorMessage("Error fetching movies")
@@ -94,5 +94,3 @@ export default function Home() {
         </main>
     )
 }
-
-
