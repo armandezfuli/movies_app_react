@@ -1,9 +1,8 @@
-import { FC } from "react"
-import type { MovieCardProps } from "../../types"
+import type { MovieCardProps } from "@/shared/types"
 
-const MovieCard: FC<MovieCardProps> = ({
-    movie: { title, vote_average, poster_path, release_date, original_language },
-}) => {
+export default function MovieCard({ movie }: MovieCardProps) {
+    const { title, vote_average, poster_path, release_date, original_language } = movie
+
     return (
         <li className="movie-card">
             <img
@@ -13,6 +12,7 @@ const MovieCard: FC<MovieCardProps> = ({
                         : "no-movie.png"
                 }
                 alt={title}
+                loading="lazy"
             />
             <div className="mt-4">
                 <h3>{title}</h3>
@@ -32,4 +32,3 @@ const MovieCard: FC<MovieCardProps> = ({
         </li>
     )
 }
-export default MovieCard

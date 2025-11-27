@@ -1,8 +1,8 @@
-import { type FC, type ChangeEvent } from "react"
-import type { SearchProps } from "../../types"
+import type { ChangeEvent } from "react"
+import type { SearchProps } from "@/shared/types"
 
-const Search: FC<SearchProps> = ({ searchTerm, setSearchTerm }) => {
-    const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
+export default function Search({ searchTerm, setSearchTerm }: SearchProps) {
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value)
     }
 
@@ -21,4 +21,3 @@ const Search: FC<SearchProps> = ({ searchTerm, setSearchTerm }) => {
         </div>
     )
 }
-export default Search

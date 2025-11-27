@@ -1,6 +1,4 @@
-import {FC} from "react";
-
-const Spinner : FC = () => {
+export default function Spinner() {
     return (
         <div role="status">
             <svg
@@ -22,8 +20,3 @@ const Spinner : FC = () => {
         </div>
     )
 }
-export default Spinner
-
-
-
-

@@ -1,8 +1,9 @@
 import { Client, Databases, ID, Query } from "appwrite"
+import type { Movie, SearchDocument } from "@/shared/types"
+
 const PROJECT_ID = import.meta.env.VITE_APPWRITE_PROJECT_ID
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID
 const COLLECTION_ID = import.meta.env.VITE_APPWRITE_COLLECTION_ID
-import type { Movie, SearchDocument } from "../types/index"
 
 const client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1")
@@ -13,7 +14,7 @@ const database = new Databases(client)
 export const updateSearchCount = async (
     searchTerm: string,
     movie: Movie
-): Promise<void> => {
+) => {
     try {
         const result = await database.listDocuments<SearchDocument>(
             DATABASE_ID,
@@ -34,20 +35,20 @@ export const updateSearchCount = async (
             })
         }
     } catch (error) {
-        console.log(error)
+        console.error("[Appwrite] updateSearchCount failed:", error)
     }
 }
 
-export const getTrendingMovies = async (): Promise<SearchDocument[]> => {
+export const getTrendingMovies = async () => {
     try {
         const result = await database.listDocuments<SearchDocument>(
             DATABASE_ID,
             COLLECTION_ID,
-            [Query.limit(5), Query.orderDesc("count")]
+            [ Query.orderDesc("count"), Query.limit(5)]
         )
         return result.documents
-    } catch (err: unknown) {
-        console.error("Error updating search count:", err)
+    } catch (error: unknown) {
+        console.error("[Appwrite] getTrendingMovies failed:", error)
     }
     return []
 }
